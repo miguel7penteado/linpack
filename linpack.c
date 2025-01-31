@@ -36,7 +36,7 @@
 #define PREC        "Single"
 #define BASE10DIG   FLT_DIG
 
-typedef float   REAL;
+typedef float   TIPO_REAL;
 #endif
 
 #ifdef DP
@@ -45,124 +45,152 @@ typedef float   REAL;
 #define PREC        "Double"
 #define BASE10DIG   DBL_DIG
 
-typedef double  REAL;
+typedef double  TIPO_REAL;
 #endif
 
-static REAL linpack  (long nreps,int arsize);
-static void matgen   (REAL *a,int lda,int n,REAL *b,REAL *norma);
-static void dgefa    (REAL *a,int lda,int n,int *ipvt,int *info,int roll);
-static void dgesl    (REAL *a,int lda,int n,int *ipvt,REAL *b,int job,int roll);
-static void daxpy_r  (int n,REAL da,REAL *dx,int incx,REAL *dy,int incy);
-static REAL ddot_r   (int n,REAL *dx,int incx,REAL *dy,int incy);
-static void dscal_r  (int n,REAL da,REAL *dx,int incx);
-static void daxpy_ur (int n,REAL da,REAL *dx,int incx,REAL *dy,int incy);
-static REAL ddot_ur  (int n,REAL *dx,int incx,REAL *dy,int incy);
-static void dscal_ur (int n,REAL da,REAL *dx,int incx);
-static int  idamax   (int n,REAL *dx,int incx);
-static REAL second   (void);
+// declaração das funções 
+
+static TIPO_REAL linpack  (long nreps,int arsize);
+static void      matgen   (TIPO_REAL *a,int lda,int n,TIPO_REAL *b,TIPO_REAL *norma);
+static void      dgefa    (TIPO_REAL *a,int lda,int n,int *ipvt,int *info,int roll);
+static void      dgesl    (TIPO_REAL *a,int lda,int n,int *ipvt,TIPO_REAL *b,int job,int roll);
+static void      daxpy_r  (int n,TIPO_REAL da,TIPO_REAL *dx,int incx,TIPO_REAL *dy,int incy);
+static TIPO_REAL ddot_r   (int n,TIPO_REAL *dx,int incx,TIPO_REAL *dy,int incy);
+static void      dscal_r  (int n,TIPO_REAL da,TIPO_REAL *dx,int incx);
+static void      daxpy_ur (int n,TIPO_REAL da,TIPO_REAL *dx,int incx,TIPO_REAL *dy,int incy);
+static TIPO_REAL ddot_ur  (int n,TIPO_REAL *dx,int incx,TIPO_REAL *dy,int incy);
+static void      dscal_ur (int n,TIPO_REAL da,TIPO_REAL *dx,int incx);
+static int       idamax   (int n,TIPO_REAL *dx,int incx);
+static TIPO_REAL second   (void);
 
 static void *mempool;
 
 
 int main(void)
 {
-    char    *arsize_input;
+    char    *entrada_tamanhoMatriz;
     int     arsize;
     long    arsize2d,nreps;
     size_t  malloc_arg,memreq;
 
-    arsize_input = getenv("LINPACK_ARRAY_SIZE");
-    if (arsize_input == NULL) {
+    entrada_tamanhoMatriz = getenv("LINPACK_TAMANHO_MATRIZ");
+	
+    if (entrada_tamanhoMatriz == NULL) 
+    {
         arsize = 200;
-    } else {
-        arsize = atoi(arsize_input);
+    } else 
+    {
+        arsize = atoi(entrada_tamanhoMatriz);
     }
 
-        arsize/=2;
-        arsize*=2;
-        if (arsize<10)
-            {
-            printf("Too small.\n");
-            return 1;
-            }
-        arsize2d = (long)arsize*(long)arsize;
-        memreq=arsize2d*sizeof(REAL)+(long)arsize*sizeof(REAL)+(long)arsize*sizeof(int);
-        printf("Memory required:  %ldK.\n",(memreq+512L)>>10);
-        malloc_arg=(size_t)memreq;
-        if (malloc_arg!=memreq || (mempool=malloc(malloc_arg))==NULL)
-            {
-            printf("Not enough memory available for given array size.\n\n");
-            return 2;
-            }
-        printf("\n\nLINPACK benchmark, %s precision.\n",PREC);
-        printf("Machine precision:  %d digits.\n",BASE10DIG);
-        printf("Array size %d X %d.\n",arsize,arsize);
-        printf("Average rolled and unrolled performance:\n\n");
-        printf("    Reps Time(s) DGEFA   DGESL  OVERHEAD    KFLOPS\n");
-        printf("----------------------------------------------------\n");
-        nreps=1;
-        while (linpack(nreps,arsize)<10.)
-            nreps*=2;
-        free(mempool);
-        printf("\n");
+	arsize/=2;
+	arsize*=2;
+	
+	if (arsize<10)
+	{
+		printf("Muito pequena.\n");
+		return 1;
+	}
+
+	arsize2d = (long)arsize*(long)arsize;
+	memreq=arsize2d*sizeof(TIPO_REAL)+(long)arsize*sizeof(TIPO_REAL)+(long)arsize*sizeof(int);
+	printf("Memoria requisitada:  %ldK.\n",(memreq+512L)>>10);
+	malloc_arg=(size_t)memreq;
+
+	if (malloc_arg!=memreq || (mempool=malloc(malloc_arg))==NULL)
+	{
+		printf("A memoria é insuficiente para o tamanho da matriz fornecido.\n\n");
+		return 2;
+	}
+	printf("\n\nLINPACK benchmark, %s precision.\n",PREC);
+	printf("Precisao da maquina:  %d digits.\n",BASE10DIG);
+	printf("Matriz de tamanho %d X %d.\n",arsize,arsize);
+	printf("Desempenho médio enrolado e desenrolado:\n\n");
+	printf("    Reps Time(s) DGEFA   DGESL  OVERHEAD    KFLOPS\n");
+	printf("----------------------------------------------------\n");
+	nreps=1;
+
+	while (linpack(nreps,arsize)<10.)
+	{
+		nreps*=2;
+	}
+
+	free(mempool);
+	printf("\n");
+	
 }
 
 
-static REAL linpack(long nreps,int arsize)
+static TIPO_REAL linpack(long nreps,int arsize)
+{
+	TIPO_REAL  *a,*b;
+	TIPO_REAL   norma,t1,kflops,tdgesl,tdgefa,totalt,toverhead,ops;
+	int   *ipvt,n,info,lda;
+	long   i,arsize2d;
+	
+	lda = arsize;
+	n = arsize/2;
+	arsize2d = (long)arsize*(long)arsize;
+	ops=((2.0*n*n*n)/3.0+2.0*n*n);
+	a=(TIPO_REAL *)mempool;
+	b=a+arsize2d;
+	ipvt=(int *)&b[arsize];
+	tdgesl=0;
+	tdgefa=0;
+	totalt=second();
 
-    {
-    REAL  *a,*b;
-    REAL   norma,t1,kflops,tdgesl,tdgefa,totalt,toverhead,ops;
-    int   *ipvt,n,info,lda;
-    long   i,arsize2d;
+    for (i=0;i<nreps;i++)
+	{
+		matgen(a,lda,n,b,&norma);
+		t1 = second();
+		dgefa(a,lda,n,ipvt,&info,1);
+		tdgefa += second()-t1;
+		t1 = second();
+		dgesl(a,lda,n,ipvt,b,0,1);
+		tdgesl += second()-t1;
+	}
 
-    lda = arsize;
-    n = arsize/2;
-    arsize2d = (long)arsize*(long)arsize;
-    ops=((2.0*n*n*n)/3.0+2.0*n*n);
-    a=(REAL *)mempool;
-    b=a+arsize2d;
-    ipvt=(int *)&b[arsize];
-    tdgesl=0;
-    tdgefa=0;
-    totalt=second();
     for (i=0;i<nreps;i++)
-        {
-        matgen(a,lda,n,b,&norma);
-        t1 = second();
-        dgefa(a,lda,n,ipvt,&info,1);
-        tdgefa += second()-t1;
-        t1 = second();
-        dgesl(a,lda,n,ipvt,b,0,1);
-        tdgesl += second()-t1;
-        }
-    for (i=0;i<nreps;i++)
-        {
-        matgen(a,lda,n,b,&norma);
-        t1 = second();
-        dgefa(a,lda,n,ipvt,&info,0);
-        tdgefa += second()-t1;
-        t1 = second();
-        dgesl(a,lda,n,ipvt,b,0,0);
-        tdgesl += second()-t1;
-        }
+	{
+		matgen(a,lda,n,b,&norma);
+		t1 = second();
+		dgefa(a,lda,n,ipvt,&info,0);
+		tdgefa += second()-t1;
+		t1 = second();
+		dgesl(a,lda,n,ipvt,b,0,0);
+		tdgesl += second()-t1;
+	}
     totalt=second()-totalt;
+
     if (totalt<0.5 || tdgefa+tdgesl<0.2)
+	{
         return(0.);
+	}
     kflops=2.*nreps*ops/(1000.*(tdgefa+tdgesl));
     toverhead=totalt-tdgefa-tdgesl;
+
     if (tdgefa<0.)
+	{
         tdgefa=0.;
+	}
+
     if (tdgesl<0.)
+	{
         tdgesl=0.;
+	}
+
     if (toverhead<0.)
+	{
         toverhead=0.;
+	}
+
     printf("%8ld %6.2f %6.2f%% %6.2f%% %6.2f%%  %9.3f\n",
             nreps,totalt,100.*tdgefa/totalt,
             100.*tdgesl/totalt,100.*toverhead/totalt,
             kflops);
+
     return(totalt);
-    }
+}
 
 
 /*
@@ -170,7 +198,7 @@ static REAL linpack(long nreps,int arsize)
 ** We would like to declare a[][lda], but c does not allow it.  In this
 ** function, references to a[i][j] are written a[lda*i+j].
 */
-static void matgen(REAL *a,int lda,int n,REAL *b,REAL *norma)
+static void matgen(TIPO_REAL *a,int lda,int n,TIPO_REAL *b,TIPO_REAL *norma)
 
     {
     int init,i,j;
@@ -193,63 +221,63 @@ static void matgen(REAL *a,int lda,int n,REAL *b,REAL *norma)
 
 
 /*
-**
-** DGEFA benchmark
-**
-** We would like to declare a[][lda], but c does not allow it.  In this
-** function, references to a[i][j] are written a[lda*i+j].
-**
-**   dgefa factors a double precision matrix by gaussian elimination.
-**
-**   dgefa is usually called by dgeco, but it can be called
-**   directly with a saving in time if  rcond  is not needed.
-**   (time for dgeco) = (1 + 9/n)*(time for dgefa) .
-**
-**   on entry
-**
-**      a       REAL precision[n][lda]
-**              the matrix to be factored.
-**
-**      lda     integer
-**              the leading dimension of the array  a .
-**
-**      n       integer
-**              the order of the matrix  a .
-**
-**   on return
-**
-**      a       an upper triangular matrix and the multipliers
-**              which were used to obtain it.
-**              the factorization can be written  a = l*u  where
-**              l  is a product of permutation and unit lower
-**              triangular matrices and  u  is upper triangular.
-**
-**      ipvt    integer[n]
-**              an integer vector of pivot indices.
-**
-**      info    integer
-**              = 0  normal value.
-**              = k  if  u[k][k] .eq. 0.0 .  this is not an error
-**                   condition for this subroutine, but it does
-**                   indicate that dgesl or dgedi will divide by zero
-**                   if called.  use  rcond  in dgeco for a reliable
-**                   indication of singularity.
-**
-**   linpack. this version dated 08/14/78 .
-**   cleve moler, university of New Mexico, argonne national lab.
-**
-**   functions
-**
-**   blas daxpy,dscal,idamax
-**
+
+DGEFA benchmark
+
+We would like to declare a[][lda], but c does not allow it.  In this
+function, references to a[i][j] are written a[lda*i+j].
+
+  A função dgefa fatora uma matriz de precisão dupla por eliminação gaussiana.
+
+  dgefa is usually called by dgeco, but it can be called
+  directly with a saving in time if  rcond  is not needed.
+  (time for dgeco) = (1 + 9/n)*(time for dgefa) .
+
+  na entrada
+
+     a       TIPO_REAL precision[n][lda]
+             a matriz a ser fatorada.
+
+     lda     inteiro
+             a dimensão principal da matriz a.
+
+     n       inteiro
+             a ordem da matriz a.
+
+  no retorno
+
+     a       uma matriz triangular superior e os multiplicadores
+             que foram usados para obtê-lo.
+             a fatoração pode ser escrita  a = l*u  onde
+             l  é um produto de permutação e unidade inferior
+             matrizes triangulares e u é triangular superior.
+
+     ipvt    integer[n]
+             um vetor inteiro de índices de pivô.
+
+     info    integer
+             = 0  normal value.
+             = k  if  u[k][k] .eq. 0.0 .  isso não é um erro
+                  condição para esta sub-rotina, mas não
+                  indica que dgesl ou dgedi serão divididos por zero
+                  se chamado. use rcond em dgeco para um confiável
+                  indicação de singularidade.
+
+  linpack. this version dated 08/14/78 .
+  cleve moler, Universidade do Novo México, laboratório nacional de Argonne.
+
+  funções
+
+  blas daxpy, dscal, idamax
+
 */
-static void dgefa(REAL *a,int lda,int n,int *ipvt,int *info,int roll)
+static void dgefa(TIPO_REAL *a,int lda,int n,int *ipvt,int *info,int roll)
 
     {
-    REAL t;
+    TIPO_REAL t;
     int idamax(),j,k,kp1,l,nm1;
 
-    /* gaussian elimination with partial pivoting */
+    /* eliminação gaussiana com pivotamento parcial */
 
     if (roll)
         {
@@ -265,13 +293,12 @@ static void dgefa(REAL *a,int lda,int n,int *ipvt,int *info,int roll)
                 l = idamax(n-k,&a[lda*k+k],1) + k;
                 ipvt[k] = l;
 
-                /* zero pivot implies this column already
-                   triangularized */
+                /* pivô zero implica que esta coluna já está triangularizada */
 
                 if (a[lda*k+l] != ZERO)
                     {
 
-                    /* interchange if necessary */
+                    /* troque se necessário */
 
                     if (l != k)
                         {
@@ -280,12 +307,12 @@ static void dgefa(REAL *a,int lda,int n,int *ipvt,int *info,int roll)
                         a[lda*k+k] = t;
                         }
 
-                    /* compute multipliers */
+                    /* calcular multiplicadores */
 
                     t = -ONE/a[lda*k+k];
                     dscal_r(n-(k+1),t,&a[lda*k+k+1],1);
 
-                    /* row elimination with column indexing */
+                    /* eliminação de linha com indexação de coluna */
 
                     for (j = kp1; j < n; j++)
                         {
@@ -319,13 +346,12 @@ static void dgefa(REAL *a,int lda,int n,int *ipvt,int *info,int roll)
                 l = idamax(n-k,&a[lda*k+k],1) + k;
                 ipvt[k] = l;
 
-                /* zero pivot implies this column already
-                   triangularized */
+                /* pivô zero implica que esta coluna já está triangularizada */
 
                 if (a[lda*k+l] != ZERO)
                     {
 
-                    /* interchange if necessary */
+                    /* troque se necessário */
 
                     if (l != k)
                         {
@@ -334,12 +360,12 @@ static void dgefa(REAL *a,int lda,int n,int *ipvt,int *info,int roll)
                         a[lda*k+k] = t;
                         }
 
-                    /* compute multipliers */
+                    /* calcular multiplicadores */
 
                     t = -ONE/a[lda*k+k];
                     dscal_ur(n-(k+1),t,&a[lda*k+k+1],1);
 
-                    /* row elimination with column indexing */
+                    /* eliminação de linha com indexação de coluna */
 
                     for (j = kp1; j < n; j++)
                         {
@@ -363,70 +389,70 @@ static void dgefa(REAL *a,int lda,int n,int *ipvt,int *info,int roll)
 
 
 /*
-**
-** DGESL benchmark
-**
-** We would like to declare a[][lda], but c does not allow it.  In this
-** function, references to a[i][j] are written a[lda*i+j].
-**
-**   dgesl solves the double precision system
-**   a * x = b  or  trans(a) * x = b
-**   using the factors computed by dgeco or dgefa.
-**
-**   on entry
-**
-**      a       double precision[n][lda]
-**              the output from dgeco or dgefa.
-**
-**      lda     integer
-**              the leading dimension of the array  a .
-**
-**      n       integer
-**              the order of the matrix  a .
-**
-**      ipvt    integer[n]
-**              the pivot vector from dgeco or dgefa.
-**
-**      b       double precision[n]
-**              the right hand side vector.
-**
-**      job     integer
-**              = 0         to solve  a*x = b ,
-**              = nonzero   to solve  trans(a)*x = b  where
-**                          trans(a)  is the transpose.
-**
-**  on return
-**
-**      b       the solution vector  x .
-**
-**   error condition
-**
-**      a division by zero will occur if the input factor contains a
-**      zero on the diagonal.  technically this indicates singularity
-**      but it is often caused by improper arguments or improper
-**      setting of lda .  it will not occur if the subroutines are
-**      called correctly and if dgeco has set rcond .gt. 0.0
-**      or dgefa has set info .eq. 0 .
-**
-**   to compute  inverse(a) * c  where  c  is a matrix
-**   with  p  columns
-**         dgeco(a,lda,n,ipvt,rcond,z)
-**         if (!rcond is too small){
-**              for (j=0,j<p,j++)
-**                      dgesl(a,lda,n,ipvt,c[j][0],0);
-**         }
-**
-**   linpack. this version dated 08/14/78 .
-**   cleve moler, university of new mexico, argonne national lab.
-**
-**   functions
-**
-**   blas daxpy,ddot
+
+DGESL benchmark
+
+We would like to declare a[][lda], but c does not allow it.  In this
+function, references to a[i][j] are written a[lda*i+j].
+
+  dgesl resolve o sistema de precisão dupla
+  a * x = b  or  trans(a) * x = b
+  usando os fatores calculados por dgeco ou dgefa.
+
+  na entrada
+
+     a       double precision[n][lda]
+             a saída de dgeco ou dgefa.
+
+     lda     integer
+             a dimensão principal da matriz a.
+
+     n       integer
+             the order of the matrix  a .
+
+     ipvt    integer[n]
+             o vetor pivô de dgeco ou dgefa.
+
+     b       double precision[n]
+             o vetor do lado direito.
+
+     job     integer
+             = 0         para resolver  a*x = b ,
+             = nonzero   para resolver  trans(a)*x = b  onde
+                         trans(a)  é a transposição.
+
+ no retorno
+
+     b       the solution vector  x .
+
+  error condition
+
+     a division by zero will occur if the input factor contains a
+     zero on the diagonal.  technically this indicates singularity
+     but it is often caused by improper arguments or improper
+     setting of lda .  it will not occur if the subroutines are
+     called correctly and if dgeco has set rcond .gt. 0.0
+     or dgefa has set info .eq. 0 .
+
+  to compute  inverse(a) * c  where  c  is a matrix
+  with  p  columns
+        dgeco(a,lda,n,ipvt,rcond,z)
+        if (!rcond is Muito pequena){
+             for (j=0,j<p,j++)
+                     dgesl(a,lda,n,ipvt,c[j][0],0);
+        }
+
+  linpack. this version dated 08/14/78 .
+  cleve moler, university of new mexico, argonne national lab.
+
+  functions
+
+  blas daxpy,ddot
 */
-static void dgesl(REAL *a,int lda,int n,int *ipvt,REAL *b,int job,int roll)
+static void dgesl(TIPO_REAL *a,int lda,int n,int *ipvt,TIPO_REAL *b,int job,int roll)
 
     {
-    REAL    t;
+    TIPO_REAL    t;
     int     k,kb,l,nm1;
 
     if (roll)
@@ -556,11 +582,11 @@ static void dgesl(REAL *a,int lda,int n,int *ipvt,REAL *b,int job,int roll)
 
 
 /*
-** Constant times a vector plus a vector.
-** Jack Dongarra, linpack, 3/11/78.
-** ROLLED version
+ Constante vezes um vetor mais um vetor.
+ Jack Dongarra, linpack, 3/11/78.
+ Versão ROLLED
 */
-static void daxpy_r(int n,REAL da,REAL *dx,int incx,REAL *dy,int incy)
+static void daxpy_r(int n,TIPO_REAL da,TIPO_REAL *dx,int incx,TIPO_REAL *dy,int incy)
 
     {
     int i,ix,iy;
@@ -573,7 +599,7 @@ static void daxpy_r(int n,REAL da,REAL *dx,int incx,REAL *dy,int incy)
     if (incx != 1 || incy != 1)
         {
 
-        /* code for unequal increments or equal increments != 1 */
+        /* código para incrementos desiguais ou incrementos iguais != 1 */
 
         ix = 1;
         iy = 1;
@@ -588,7 +614,7 @@ static void daxpy_r(int n,REAL da,REAL *dx,int incx,REAL *dy,int incy)
         return;
         }
 
-    /* code for both increments equal to 1 */
+    /* código para ambos os incrementos iguais a 1 */
 
     for (i = 0;i < n; i++)
         dy[i] = dy[i] + da*dx[i];
@@ -596,14 +622,14 @@ static void daxpy_r(int n,REAL da,REAL *dx,int incx,REAL *dy,int incy)
 
 
 /*
-** Forms the dot product of two vectors.
-** Jack Dongarra, linpack, 3/11/78.
-** ROLLED version
+ Forma o produto escalar de dois vetores.
+ Jack Dongarra, linpack, 3/11/78.
+ Versão ROLLED
 */
-static REAL ddot_r(int n,REAL *dx,int incx,REAL *dy,int incy)
+static TIPO_REAL ddot_r(int n,TIPO_REAL *dx,int incx,TIPO_REAL *dy,int incy)
 
     {
-    REAL dtemp;
+    TIPO_REAL dtemp;
     int i,ix,iy;
 
     dtemp = ZERO;
@@ -629,7 +655,7 @@ static REAL ddot_r(int n,REAL *dx,int incx,REAL *dy,int incy)
         return(dtemp);
         }
 
-    /* code for both increments equal to 1 */
+    /* código para ambos os incrementos iguais a 1 */
 
     for (i=0;i < n; i++)
         dtemp = dtemp + dx[i]*dy[i];
@@ -638,11 +664,11 @@ static REAL ddot_r(int n,REAL *dx,int incx,REAL *dy,int incy)
 
 
 /*
-** Scales a vector by a constant.
-** Jack Dongarra, linpack, 3/11/78.
-** ROLLED version
+ Escala um vetor por uma constante.
+ Jack Dongarra, linpack, 3/11/78.
+ Versão ROLLED
 */
-static void dscal_r(int n,REAL da,REAL *dx,int incx)
+static void dscal_r(int n,TIPO_REAL da,TIPO_REAL *dx,int incx)
 
     {
     int i,nincx;
@@ -652,7 +678,7 @@ static void dscal_r(int n,REAL da,REAL *dx,int incx)
     if (incx != 1)
         {
 
-        /* code for increment not equal to 1 */
+        /* código para incremento não igual a 1 */
 
         nincx = n*incx;
         for (i = 0; i < nincx; i = i + incx)
@@ -660,7 +686,7 @@ static void dscal_r(int n,REAL da,REAL *dx,int incx)
         return;
         }
 
-    /* code for increment equal to 1 */
+    /* código para incremento igual a 1 */
 
     for (i = 0; i < n; i++)
         dx[i] = da*dx[i];
@@ -668,11 +694,11 @@ static void dscal_r(int n,REAL da,REAL *dx,int incx)
 
 
 /*
-** constant times a vector plus a vector.
+** constante vezes um vetor mais um vetor.
 ** Jack Dongarra, linpack, 3/11/78.
-** UNROLLED version
+** UNVersão ROLLED
 */
-static void daxpy_ur(int n,REAL da,REAL *dx,int incx,REAL *dy,int incy)
+static void daxpy_ur(int n,TIPO_REAL da,TIPO_REAL *dx,int incx,TIPO_REAL *dy,int incy)
 
     {
     int i,ix,iy,m;
@@ -685,7 +711,7 @@ static void daxpy_ur(int n,REAL da,REAL *dx,int incx,REAL *dy,int incy)
     if (incx != 1 || incy != 1)
         {
 
-        /* code for unequal increments or equal increments != 1 */
+        /* código para incrementos desiguais ou incrementos iguais != 1 */
 
         ix = 1;
         iy = 1;
@@ -700,7 +726,7 @@ static void daxpy_ur(int n,REAL da,REAL *dx,int incx,REAL *dy,int incy)
         return;
         }
 
-    /* code for both increments equal to 1 */
+    /* código para ambos os incrementos iguais a 1 */
 
     m = n % 4;
     if ( m != 0)
@@ -721,14 +747,14 @@ static void daxpy_ur(int n,REAL da,REAL *dx,int incx,REAL *dy,int incy)
 
 
 /*
-** Forms the dot product of two vectors.
-** Jack Dongarra, linpack, 3/11/78.
-** UNROLLED version
+ Forma o produto escalar de dois vetores.
+ Jack Dongarra, linpack, 3/11/78.
+ Versão ROLLED
 */
-static REAL ddot_ur(int n,REAL *dx,int incx,REAL *dy,int incy)
+static TIPO_REAL ddot_ur(int n,TIPO_REAL *dx,int incx,TIPO_REAL *dy,int incy)
 
     {
-    REAL dtemp;
+    TIPO_REAL dtemp;
     int i,ix,iy,m;
 
     dtemp = ZERO;
@@ -739,7 +765,7 @@ static REAL ddot_ur(int n,REAL *dx,int incx,REAL *dy,int incy)
     if (incx != 1 || incy != 1)
         {
 
-        /* code for unequal increments or equal increments != 1 */
+        /* código para incrementos desiguais ou incrementos iguais != 1 */
 
         ix = 0;
         iy = 0;
@@ -754,7 +780,7 @@ static REAL ddot_ur(int n,REAL *dx,int incx,REAL *dy,int incy)
         return(dtemp);
         }
 
-    /* code for both increments equal to 1 */
+    /* código para ambos os incrementos iguais a 1 */
 
     m = n % 5;
     if (m != 0)
@@ -775,11 +801,11 @@ static REAL ddot_ur(int n,REAL *dx,int incx,REAL *dy,int incy)
 
 
 /*
-** Scales a vector by a constant.
+** Escala um vetor por uma constante.
 ** Jack Dongarra, linpack, 3/11/78.
-** UNROLLED version
+** UNVersão ROLLED
 */
-static void dscal_ur(int n,REAL da,REAL *dx,int incx)
+static void dscal_ur(int n,TIPO_REAL da,TIPO_REAL *dx,int incx)
 
     {
     int i,m,nincx;
@@ -819,13 +845,13 @@ static void dscal_ur(int n,REAL da,REAL *dx,int incx)
 
 
 /*
-** Finds the index of element having max. absolute value.
+** Encontra o índice do elemento com valor absoluto máximo.
 ** Jack Dongarra, linpack, 3/11/78.
 */
-static int idamax(int n,REAL *dx,int incx)
+static int idamax(int n,TIPO_REAL *dx,int incx)
 
     {
-    REAL dmax;
+    TIPO_REAL dmax;
     int i, ix, itemp;
 
     if (n < 1)
@@ -835,7 +861,7 @@ static int idamax(int n,REAL *dx,int incx)
     if(incx != 1)
         {
 
-        /* code for increment not equal to 1 */
+        /* código para incremento não igual a 1 */
 
         ix = 1;
         dmax = fabs((double)dx[0]);
@@ -853,7 +879,7 @@ static int idamax(int n,REAL *dx,int incx)
     else
         {
 
-        /* code for increment equal to 1 */
+        /* código para incremento igual a 1 */
 
         itemp = 0;
         dmax = fabs((double)dx[0]);
@@ -868,10 +894,16 @@ static int idamax(int n,REAL *dx,int incx)
     }
 
 
-static REAL second(void)
-
-    {
-    return ((REAL)((REAL)clock()/(REAL)CLOCKS_PER_SEC));
-    }
+static TIPO_REAL second(void)
+{
+	return (
+				(TIPO_REAL)
+				(
+					(TIPO_REAL)clock()
+					/
+					(TIPO_REAL)CLOCKS_PER_SEC
+				)
+			);
+}
 
 

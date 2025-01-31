@@ -1,0 +1,41 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\miguel\\source\\repos\\miguel7penteado\\linpack\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{6864DC77-86E0-48C2-9B83-A925DC3655AA}|linpack.vcxproj|C:\\Users\\miguel\\source\\repos\\miguel7penteado\\linpack\\linpack.c||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{6864DC77-86E0-48C2-9B83-A925DC3655AA}|linpack.vcxproj|solutionrelative:linpack.c||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 1,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "linpack.c",
+              "DocumentMoniker": "C:\\Users\\miguel\\source\\repos\\miguel7penteado\\linpack\\linpack.c",
+              "RelativeDocumentMoniker": "linpack.c",
+              "ToolTip": "C:\\Users\\miguel\\source\\repos\\miguel7penteado\\linpack\\linpack.c",
+              "RelativeToolTip": "linpack.c",
+              "ViewState": "AgIAAE0AAAAAAAAAAAAAAFwAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000423|",
+              "WhenOpened": "2025-01-31T16:49:40.35Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

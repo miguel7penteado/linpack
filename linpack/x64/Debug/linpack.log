@@ -1,0 +1,6 @@
+﻿  linpack.c
+C:\Users\miguel\source\repos\miguel7penteado\linpack\linpack.c(97,9): warning C4477: 'printf': a cadeia de formato '%ld' requer um argumento do tipo 'long', mas um argumento variadic 1 tem o tipo 'size_t'
+      C:\Users\miguel\source\repos\miguel7penteado\linpack\linpack.c(97,9):
+      considere usar '%zd' na cadeia de formato
+  
+  linpack.vcxproj -> C:\Users\miguel\source\repos\miguel7penteado\linpack\x64\Debug\linpack.exe
